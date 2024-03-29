@@ -30,6 +30,7 @@ use pocketmine\network\mcpe\protocol\MovePlayerPacket;
 class Loader extends PluginBase implements Listener {
     private array $npcIdGetter = [];
     private array $npcRemover = [];
+    private array $npcCommandExecutors = [];
 
     protected function onEnable(): void {
         EntityFactory::getInstance()->register(HumanNPC::class, function (World $world, CompoundTag $nbt): HumanNPC {
@@ -266,7 +267,9 @@ class Loader extends PluginBase implements Listener {
 
                 if (($commands = $entity->getCommands()) != [] and !isset($this->npcIdGetter[$damager->getName()]) and !isset($this->npcRemover[$damager->getName()])) {
                     foreach ($commands as $command) {
+                        $this->npcCommandExecutors[$damager->getName()] = true; // Marcamos que el jugador está ejecutando un comando a través del NPC
                         $this->getServer()->dispatchCommand(new ConsoleCommandSender($this->getServer(), $this->getServer()->getLanguage()), str_replace('{player}', '"' . $damager->getName() . '"', $command));
+                        unset($this->npcCommandExecutors[$damager->getName()]); // Desmarcamos que el jugador está ejecutando un comando a través del NPC
                     }
                 }
 
@@ -287,6 +290,37 @@ class Loader extends PluginBase implements Listener {
             }
         }
     }
+
+    public function onPlayerCommandPreprocess(PlayerCommandPreprocessEvent $event): void
+    {
+        $player = $event->getPlayer();
+        $message = $event->getMessage();
+
+        if (substr($message, 0, 1) !== "/") { // Si el mensaje no es un comando
+            return;
+        }
+
+        $command = substr($message, 1); // Obtenemos el comando sin la barra inicial
+
+        // Aquí obtenemos la lista de comandos que solo se pueden ejecutar a través del NPC desde el archivo config.yml
+        $restrictedCommands = $this->getConfig()->get("restrictedCommands", []);
+
+        foreach ($restrictedCommands as $restrictedCommand) {
+            if (strpos($command, $restrictedCommand) === 0) { // Si el comando es uno de los restringidos
+                if (isset($this->npcCommandExecutors[$player->getName()])) { // Si el comando se está ejecutando a través del NPC
+                    return;
+                }
+
+                $event->setCancelled(); // Cancelamos la ejecución del comando
+                $message = $this->getConfig()->get("message", []);
+                if(isset($message) && !empty($message)) {
+                    $player->sendMessage("Debes ejecutar este comando a través del NPC."); // Enviamos un mensaje al jugador
+                }
+                return;
+            }
+        }
+    }
+
 
     public function onPlayerMove(PlayerMoveEvent $event): void {
         $player = $event->getPlayer();

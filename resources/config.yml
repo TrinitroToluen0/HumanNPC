@@ -1,0 +1,8 @@
+# Message to send if the command is only NPC executable
+message: ""
+
+# These commands can only be executed through an NPC
+restrictedCommands:
+  - command1
+  - command2
+  - command3
