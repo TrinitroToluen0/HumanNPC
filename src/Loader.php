@@ -292,7 +292,7 @@ class Loader extends PluginBase implements Listener {
         }
     }
 
-    public function onCommandMod(CommandEvent $event): void
+    public function interceptCommand(CommandEvent $event): void
     {
         $sender = $event->getSender();
         $message = $event->getCommand();
@@ -301,7 +301,8 @@ class Loader extends PluginBase implements Listener {
             return;
         }
 
-        if ($sender->isOp()) {
+        // Si el remitente es un operador, no hacemos nada y salimos de la función
+        if ($this->getServer()->isOp($sender->getName())) {
             return;
         }
 
