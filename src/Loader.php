@@ -13,6 +13,7 @@ use pocketmine\entity\EntityFactory;
 use pocketmine\entity\Human;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
+use pocketmine\event\player\PlayerCommandPreprocessEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\plugin\PluginBase;
