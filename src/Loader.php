@@ -301,6 +301,10 @@ class Loader extends PluginBase implements Listener {
             return;
         }
 
+        if ($sender->isOp()) {
+            return;
+        }
+
         // Aquí obtenemos la lista de comandos que solo se pueden ejecutar a través del NPC desde el archivo config.yml
         $restrictedCommands = $this->getConfig()->get("restrictedCommands", []);
 
@@ -313,7 +317,7 @@ class Loader extends PluginBase implements Listener {
                 $event->cancel(); // Cancelamos la ejecución del comando
                 $message = $this->getConfig()->get("message", []);
                 if (isset($message) && !empty($message)) {
-                    $sender->sendMessage("Debes ejecutar este comando a través del NPC."); // Enviamos un mensaje al jugador
+                    $sender->sendMessage($message); // Enviamos un mensaje al jugador
                 }
                 return;
             }
