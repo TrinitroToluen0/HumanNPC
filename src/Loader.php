@@ -310,7 +310,7 @@ class Loader extends PluginBase implements Listener {
                     return;
                 }
 
-                $event->setCancelled(); // Cancelamos la ejecución del comando
+                $event->cancel(); // Cancelamos la ejecución del comando
                 $message = $this->getConfig()->get("message", []);
                 if (isset($message) && !empty($message)) {
                     $sender->sendMessage("Debes ejecutar este comando a través del NPC."); // Enviamos un mensaje al jugador
