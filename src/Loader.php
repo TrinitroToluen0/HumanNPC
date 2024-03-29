@@ -13,7 +13,7 @@ use pocketmine\entity\EntityFactory;
 use pocketmine\entity\Human;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
-use pocketmine\event\player\PlayerCommandPreprocessEvent;
+use pocketmine\event\server\CommandEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\plugin\PluginBase;
@@ -292,30 +292,28 @@ class Loader extends PluginBase implements Listener {
         }
     }
 
-    public function onPlayerCommandPreprocess(PlayerCommandPreprocessEvent $event): void
+    public function onCommandMod(CommandEvent $event): void
     {
-        $player = $event->getPlayer();
-        $message = $event->getMessage();
+        $sender = $event->getSender();
+        $message = $event->getCommand();
 
-        if (substr($message, 0, 1) !== "/") { // Si el mensaje no es un comando
+        if (!$sender instanceof Player) { // Si el remitente no es un jugador
             return;
         }
-
-        $command = substr($message, 1); // Obtenemos el comando sin la barra inicial
 
         // Aquí obtenemos la lista de comandos que solo se pueden ejecutar a través del NPC desde el archivo config.yml
         $restrictedCommands = $this->getConfig()->get("restrictedCommands", []);
 
         foreach ($restrictedCommands as $restrictedCommand) {
-            if (strpos($command, $restrictedCommand) === 0) { // Si el comando es uno de los restringidos
-                if (isset($this->npcCommandExecutors[$player->getName()])) { // Si el comando se está ejecutando a través del NPC
+            if (strpos($message, $restrictedCommand) === 0) { // Si el comando es uno de los restringidos
+                if (isset($this->npcCommandExecutors[$sender->getName()])) { // Si el comando se está ejecutando a través del NPC
                     return;
                 }
 
                 $event->setCancelled(); // Cancelamos la ejecución del comando
                 $message = $this->getConfig()->get("message", []);
-                if(isset($message) && !empty($message)) {
-                    $player->sendMessage("Debes ejecutar este comando a través del NPC."); // Enviamos un mensaje al jugador
+                if (isset($message) && !empty($message)) {
+                    $sender->sendMessage("Debes ejecutar este comando a través del NPC."); // Enviamos un mensaje al jugador
                 }
                 return;
             }
