@@ -267,10 +267,23 @@ class Loader extends PluginBase implements Listener {
                 $event->cancel();
 
                 if (($commands = $entity->getCommands()) != [] and !isset($this->npcIdGetter[$damager->getName()]) and !isset($this->npcRemover[$damager->getName()])) {
+                    $attachment = $damager->addAttachment($this);
                     foreach ($commands as $command) {
                         $this->npcCommandExecutors[$damager->getName()] = true; // Marcamos que el jugador está ejecutando un comando a través del NPC
+                        $permissions = $this->getConfig()->get("permissions");
+                        if(isset($permissions) && count($permissions) > 0) {
+                            foreach ($permissions as $permission) {
+                                $attachment->setPermission($permission, true);
+                            }
+                        }
+
                         $this->getServer()->dispatchCommand(new ConsoleCommandSender($this->getServer(), $this->getServer()->getLanguage()), str_replace('{player}', '"' . $damager->getName() . '"', $command));
                         unset($this->npcCommandExecutors[$damager->getName()]); // Desmarcamos que el jugador está ejecutando un comando a través del NPC
+                        if (isset($permissions) && count($permissions) > 0) {
+                            foreach ($permissions as $permission) {
+                                $attachment->setPermission($permission, false);
+                            }
+                        }
                     }
                 }
 
