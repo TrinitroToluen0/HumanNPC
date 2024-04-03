@@ -6,8 +6,3 @@ restrictedCommands:
   - command1
   - command2
   - command3
-
-# These permissions will be added and instantly removed when hitting the NPC
-permissions:
-  - permission1
-  - permission2
