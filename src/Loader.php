@@ -310,7 +310,7 @@ class Loader extends PluginBase implements Listener {
         $restrictedCommands = $this->getConfig()->get("restrictedCommands", []);
 
         foreach ($restrictedCommands as $restrictedCommand) {
-            if (strpos($message, $restrictedCommand) === 0) { // Si el comando es uno de los restringidos
+            if (strpos($message, $restrictedCommand) !== false) { // Si el comando es uno de los restringidos
                 if (isset($this->npcCommandExecutors[$sender->getName()])) { // Si el comando se está ejecutando a través del NPC
                     return;
                 }
