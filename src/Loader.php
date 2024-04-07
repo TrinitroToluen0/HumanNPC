@@ -23,6 +23,7 @@ use pocketmine\utils\TextFormat;
 use pocketmine\world\World;
 use pocketmine\entity\Location;
 use pocketmine\console\ConsoleCommandSender;
+use pocketmine\event\entity\EntityDamageByChildEntityEvent;
 use pocketmine\item\VanillaItems;
 use pocketmine\math\Vector2;
 use pocketmine\nbt\tag\ListTag;
@@ -259,7 +260,7 @@ class Loader extends PluginBase implements Listener {
     }
 
     public function onEntityDamage(EntityDamageEvent $event): void {
-        if ($event instanceof EntityDamageByEntityEvent) {
+        if ($event instanceof EntityDamageByChildEntityEvent) {
             $damager = $event->getDamager();
             $entity = $event->getEntity();
 
@@ -268,9 +269,9 @@ class Loader extends PluginBase implements Listener {
 
                 if (($commands = $entity->getCommands()) != [] and !isset($this->npcIdGetter[$damager->getName()]) and !isset($this->npcRemover[$damager->getName()])) {
                     foreach ($commands as $command) {
-                        $this->npcCommandExecutors[$damager->getName()] = true; // Marcamos que el jugador está ejecutando un comando a través del NPC
+                        $this->npcCommandExecutors[$damager->getName()] = true;
                         $this->getServer()->dispatchCommand(new ConsoleCommandSender($this->getServer(), $this->getServer()->getLanguage()), str_replace('{player}', '"' . $damager->getName() . '"', $command));
-                        unset($this->npcCommandExecutors[$damager->getName()]); // Desmarcamos que el jugador está ejecutando un comando a través del NPC
+                        unset($this->npcCommandExecutors[$damager->getName()]);
                     }
                 }
 
