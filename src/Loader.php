@@ -262,13 +262,12 @@ class Loader extends PluginBase implements Listener {
     public function onEntityDamage(EntityDamageEvent $event): void {
         $entity = $event->getEntity();
         if (!($entity instanceof HumanNPC)) return;
+        $event->cancel();
 
         if (!($event instanceof EntityDamageByEntityEvent) || $event instanceof EntityDamageByChildEntityEvent) return;
 
         $damager = $event->getDamager();
         if (!($damager instanceof Player)) return;
-
-        $event->cancel();
 
         if (isset($this->npcIdGetter[$damager->getName()])) {
             $damager->sendMessage(TextFormat::colorize("&aThat HumanNPC id is: " . $entity->getId()));
