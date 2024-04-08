@@ -260,38 +260,41 @@ class Loader extends PluginBase implements Listener {
     }
 
     public function onEntityDamage(EntityDamageEvent $event): void {
-        if ($event instanceof EntityDamageByChildEntityEvent) {
-            $damager = $event->getDamager();
-            $entity = $event->getEntity();
+        $entity = $event->getEntity();
+        if (!($entity instanceof HumanNPC)) return;
 
-            if ($damager instanceof Player and $entity instanceof HumanNPC) {
-                $event->cancel();
+        if (!($event instanceof EntityDamageByEntityEvent) || $event instanceof EntityDamageByChildEntityEvent) return;
 
-                if (($commands = $entity->getCommands()) != [] and !isset($this->npcIdGetter[$damager->getName()]) and !isset($this->npcRemover[$damager->getName()])) {
-                    foreach ($commands as $command) {
-                        $this->npcCommandExecutors[$damager->getName()] = true;
-                        $this->getServer()->dispatchCommand(new ConsoleCommandSender($this->getServer(), $this->getServer()->getLanguage()), str_replace('{player}', '"' . $damager->getName() . '"', $command));
-                        unset($this->npcCommandExecutors[$damager->getName()]);
-                    }
-                }
+        $damager = $event->getDamager();
+        if (!($damager instanceof Player)) return;
 
-                if (isset($this->npcIdGetter[$damager->getName()])) {
-                    $event->cancel();
-                    $damager->sendMessage(TextFormat::colorize("&aThat HumanNPC id is: " . $entity->getId()));
-                    unset($this->npcIdGetter[$damager->getName()]);
-                }
+        $event->cancel();
 
-                if (isset($this->npcRemover[$damager->getName()])) {
-                    $event->cancel();
-                    $ev = new HumanRemoveEvent($entity, $damager);
-                    $ev->call();
-                    $entity->close();
-                    $damager->sendMessage(TextFormat::colorize("&aHumanNPC removed successfully"));
-                    unset($this->npcRemover[$damager->getName()]);
-                }
-            }
+        if (isset($this->npcIdGetter[$damager->getName()])) {
+            $damager->sendMessage(TextFormat::colorize("&aThat HumanNPC id is: " . $entity->getId()));
+            unset($this->npcIdGetter[$damager->getName()]);
+            return;
+        }
+
+        if (isset($this->npcRemover[$damager->getName()])) {
+            $ev = new HumanRemoveEvent($entity, $damager);
+            $ev->call();
+            $entity->close();
+            $damager->sendMessage(TextFormat::colorize("&aHumanNPC removed successfully"));
+            unset($this->npcRemover[$damager->getName()]);
+            return;
+        }
+
+        $commands = $entity->getCommands();
+        if (empty($commands) || isset($this->npcIdGetter[$damager->getName()]) || isset($this->npcRemover[$damager->getName()])) return;
+
+        foreach ($commands as $command) {
+            $this->npcCommandExecutors[$damager->getName()] = true;
+            $this->getServer()->dispatchCommand(new ConsoleCommandSender($this->getServer(), $this->getServer()->getLanguage()), str_replace('{player}', '"' . $damager->getName() . '"', $command));
+            unset($this->npcCommandExecutors[$damager->getName()]);
         }
     }
+
 
     public function interceptCommand(CommandEvent $event): void
     {
