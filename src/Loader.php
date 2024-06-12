@@ -293,12 +293,12 @@ class Loader extends PluginBase implements Listener {
     public function onEntityDamage(EntityDamageByEntityEvent $event): void
     {
         $entity = $event->getEntity();
-        $player = $event->getDamager();
+        $damager = $event->getDamager();
 
-        if (!$player instanceof Player) return;
+        if (!$damager instanceof Player) return;
         if ($event instanceof EntityDamageByChildEntityEvent) return;
 
-        $this->handleNpcInteraction($player, $entity);
+        $this->handleNpcInteraction($damager, $entity);
     }
 
     public function onPlayerEntityInteract(PlayerEntityInteractEvent $event): void
