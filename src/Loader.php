@@ -31,12 +31,14 @@ use pocketmine\math\Vector2;
 use pocketmine\nbt\tag\ListTag;
 use pocketmine\network\mcpe\protocol\MovePlayerPacket;
 
-class Loader extends PluginBase implements Listener {
+class Loader extends PluginBase implements Listener
+{
     private array $npcIdGetter = [];
     private array $npcRemover = [];
     private array $npcCommandExecutors = [];
 
-    protected function onEnable(): void {
+    protected function onEnable(): void
+    {
         EntityFactory::getInstance()->register(HumanNPC::class, function (World $world, CompoundTag $nbt): HumanNPC {
             return new HumanNPC(EntityDataHelper::parseLocation($nbt, $world), Human::parseSkinNBT($nbt), $nbt);
         }, ['HumanNPC', 'humannpc', 'hnpc']);
@@ -45,7 +47,8 @@ class Loader extends PluginBase implements Listener {
         $this->getServer()->getAsyncPool()->submitTask(new CheckUpdateTask($this->getDescription()->getName(), $this->getDescription()->getVersion()));
     }
 
-    public function onCommand(CommandSender $sender, Command $command, string $label, array $args): bool {
+    public function onCommand(CommandSender $sender, Command $command, string $label, array $args): bool
+    {
         switch (strtolower($command->getName())) {
             case "runcommandas":
                 if (count($args) < 2) {
@@ -297,6 +300,7 @@ class Loader extends PluginBase implements Listener {
 
         if (!$damager instanceof Player) return;
         if ($event instanceof EntityDamageByChildEntityEvent) return;
+        if ($entity instanceof HumanNPC) $event->cancel();
 
         $this->handleNpcInteraction($damager, $entity);
     }
@@ -343,7 +347,8 @@ class Loader extends PluginBase implements Listener {
     }
 
 
-    public function onPlayerMove(PlayerMoveEvent $event): void {
+    public function onPlayerMove(PlayerMoveEvent $event): void
+    {
         $player = $event->getPlayer();
         $from = $event->getFrom();
         $to = $event->getTo();
