@@ -24,6 +24,7 @@ use pocketmine\world\World;
 use pocketmine\entity\Location;
 use pocketmine\console\ConsoleCommandSender;
 use pocketmine\event\entity\EntityDamageByChildEntityEvent;
+use pocketmine\event\player\PlayerEntityInteractEvent;
 use pocketmine\item\VanillaItems;
 use pocketmine\math\Vector2;
 use pocketmine\nbt\tag\ListTag;
@@ -259,38 +260,38 @@ class Loader extends PluginBase implements Listener {
         return false;
     }
 
-    public function onEntityDamage(EntityDamageEvent $event): void {
+    public function onEntityDamage(EntityDamageByEntityEvent|PlayerEntityInteractEvent $event): void {
         $entity = $event->getEntity();
         if (!($entity instanceof HumanNPC)) return;
         $event->cancel();
 
-        if (!($event instanceof EntityDamageByEntityEvent) || $event instanceof EntityDamageByChildEntityEvent) return;
+        if ($event instanceof EntityDamageByChildEntityEvent) return;
 
-        $damager = $event->getDamager();
-        if (!($damager instanceof Player)) return;
+        $player = $event instanceof EntityDamageByEntityEvent ? $event->getDamager() : $event->getPlayer();
+        if (!$player instanceof Player) return;
 
-        if (isset($this->npcIdGetter[$damager->getName()])) {
-            $damager->sendMessage(TextFormat::colorize("&aThat HumanNPC id is: " . $entity->getId()));
-            unset($this->npcIdGetter[$damager->getName()]);
+        if (isset($this->npcIdGetter[$player->getName()])) {
+            $player->sendMessage(TextFormat::colorize("&aThat HumanNPC id is: " . $entity->getId()));
+            unset($this->npcIdGetter[$player->getName()]);
             return;
         }
 
-        if (isset($this->npcRemover[$damager->getName()])) {
-            $ev = new HumanRemoveEvent($entity, $damager);
+        if (isset($this->npcRemover[$player->getName()])) {
+            $ev = new HumanRemoveEvent($entity, $player);
             $ev->call();
             $entity->close();
-            $damager->sendMessage(TextFormat::colorize("&aHumanNPC removed successfully"));
-            unset($this->npcRemover[$damager->getName()]);
+            $player->sendMessage(TextFormat::colorize("&aHumanNPC removed successfully"));
+            unset($this->npcRemover[$player->getName()]);
             return;
         }
 
         $commands = $entity->getCommands();
-        if (empty($commands) || isset($this->npcIdGetter[$damager->getName()]) || isset($this->npcRemover[$damager->getName()])) return;
+        if (empty($commands) || isset($this->npcIdGetter[$player->getName()]) || isset($this->npcRemover[$player->getName()])) return;
 
         foreach ($commands as $command) {
-            $this->npcCommandExecutors[$damager->getName()] = true;
-            $this->getServer()->dispatchCommand(new ConsoleCommandSender($this->getServer(), $this->getServer()->getLanguage()), str_replace('{player}', '"' . $damager->getName() . '"', $command));
-            unset($this->npcCommandExecutors[$damager->getName()]);
+            $this->npcCommandExecutors[$player->getName()] = true;
+            $this->getServer()->dispatchCommand(new ConsoleCommandSender($this->getServer(), $this->getServer()->getLanguage()), str_replace('{player}', '"' . $player->getName() . '"', $command));
+            unset($this->npcCommandExecutors[$player->getName()]);
         }
     }
 
