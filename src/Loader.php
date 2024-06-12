@@ -23,6 +23,7 @@ use pocketmine\utils\TextFormat;
 use pocketmine\world\World;
 use pocketmine\entity\Location;
 use pocketmine\console\ConsoleCommandSender;
+use pocketmine\entity\Entity;
 use pocketmine\event\entity\EntityDamageByChildEntityEvent;
 use pocketmine\event\player\PlayerEntityInteractEvent;
 use pocketmine\item\VanillaItems;
@@ -260,15 +261,9 @@ class Loader extends PluginBase implements Listener {
         return false;
     }
 
-    public function onEntityDamage(EntityDamageByEntityEvent|PlayerEntityInteractEvent $event): void {
-        $entity = $event->getEntity();
+    public function handleNpcInteraction(Player $player, Entity $entity): void
+    {
         if (!($entity instanceof HumanNPC)) return;
-        $event->cancel();
-
-        if ($event instanceof EntityDamageByChildEntityEvent) return;
-
-        $player = $event instanceof EntityDamageByEntityEvent ? $event->getDamager() : $event->getPlayer();
-        if (!$player instanceof Player) return;
 
         if (isset($this->npcIdGetter[$player->getName()])) {
             $player->sendMessage(TextFormat::colorize("&aThat HumanNPC id is: " . $entity->getId()));
@@ -295,6 +290,24 @@ class Loader extends PluginBase implements Listener {
         }
     }
 
+    public function onEntityDamage(EntityDamageByEntityEvent $event): void
+    {
+        $entity = $event->getEntity();
+        $player = $event->getDamager();
+
+        if (!$player instanceof Player) return;
+        if ($event instanceof EntityDamageByChildEntityEvent) return;
+
+        $this->handleNpcInteraction($player, $entity);
+    }
+
+    public function onPlayerEntityInteract(PlayerEntityInteractEvent $event): void
+    {
+        $player = $event->getPlayer();
+        $entity = $event->getEntity();
+
+        $this->handleNpcInteraction($player, $entity);
+    }
 
     public function interceptCommand(CommandEvent $event): void
     {
